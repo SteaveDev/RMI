@@ -6,6 +6,16 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Date;
 
+
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+
 @SuppressWarnings("serial")
 public class DataImpl extends UnicastRemoteObject implements Data {
 
@@ -15,7 +25,7 @@ public class DataImpl extends UnicastRemoteObject implements Data {
 	private Classement[] podium;
 	
 	/*
-	 * Constructeur par défaut
+	 * Constructeur par dÃ©faut
 	 */
 	public DataImpl() throws RemoteException {
 		les_messages = new ArrayList<>();
@@ -64,19 +74,19 @@ public class DataImpl extends UnicastRemoteObject implements Data {
 	 * (non-Javadoc)
 	 * @see Data#start()
 	 *
-	 * Fonction adaptée pour la lecture du fichier "reseau social.txt"
-	 * En récupurant les différentes informations
+	 * Fonction adaptÃ©e pour la lecture du fichier "reseau social.txt"
+	 * En rÃ©cupurant les diffÃ©rentes informations
 	 * 
-	 * On demande à la fonction de lire chaque ligne jusqu'à la fin
-	 * Initialisation des variables pour les différents identifiants, pid, les messages, les utilisateur
+	 * On demande Ã  la fonction de lire chaque ligne jusqu'Ã  la fin
+	 * Initialisation des variables pour les diffÃ©rents identifiants, pid, les messages, les utilisateur
 	 * 
-	 * "tempo" sert à récupérer temporairement la chaine de caractères entre chaque '|'
-	 * "nbBaton" servira à compter le nombre de '|' que le programme aura parcouru sur chaque ligne
+	 * "tempo" sert Ã  rÃ©cupÃ©rer temporairement la chaine de caractÃ¨res entre chaque '|'
+	 * "nbBaton" servira Ã  compter le nombre de '|' que le programme aura parcouru sur chaque ligne
 	 * 
-	 * Si, le caractère est différent de '|' alors on continue de créer la chaine 
+	 * Si, le caractÃ¨re est diffÃ©rent de '|' alors on continue de crÃ©er la chaine 
 	 * Sinon, avec "tempo" on peut la stocker sur une des variables correspondantes (user, message, id, etc..) 
 	 * 
-	 * J'utilise aussi la conversion des chaines de caratères en entier, avec Integer.ParseInt(chaine)
+	 * J'utilise aussi la conversion des chaines de caratÃ¨res en entier, avec Integer.ParseInt(chaine)
 	 * 
 	 * 
 	 * 
@@ -136,16 +146,16 @@ public class DataImpl extends UnicastRemoteObject implements Data {
 	 * (non-Javadoc)
 	 * @see Data#majScoreTempsReel()
 	 * 
-	 * Fonction pour mettre à jour les scores des Messages et Commentaires
+	 * Fonction pour mettre Ã  jour les scores des Messages et Commentaires
 	 * 
 	 * Premiere boucle :
 	 * On recupere chaque message dans l'ArrayList
-	 * On fait une comparaison entre la date de création et la date actuelle
-	 * On décrémente de 1 toute les 30 secondes
-	 * Si le score descends en dessous de 0 alors on arrete de décrémenter
+	 * On fait une comparaison entre la date de crÃ©ation et la date actuelle
+	 * On dÃ©crÃ©mente de 1 toute les 30 secondes
+	 * Si le score descends en dessous de 0 alors on arrete de dÃ©crÃ©menter
 	 * 
 	 * Seconde boucle : 
-	 * Identique à la premire boucle mais pour le fait pour l'ArrayList appartenant à Commentaire 
+	 * Identique Ã  la premire boucle mais pour le fait pour l'ArrayList appartenant Ã  Commentaire 
 	 * 
 	 * 
 	 */
@@ -176,7 +186,7 @@ public class DataImpl extends UnicastRemoteObject implements Data {
 	 * 
 	 * Boucle(j) : On recupere les scores de chaque commentaires appartenenant au message(i)
 	 * On fait la somme de tous les scores, pour les ajouter au message(i) avec la fonction setScore
-	 * Et on remets à jour l'ArrayList Message pour que la mise à jour soit bien effective
+	 * Et on remets Ã  jour l'ArrayList Message pour que la mise Ã  jour soit bien effective
 	 * 
 	 */
 	public void majScoreMessage() throws RemoteException{
@@ -200,7 +210,7 @@ public class DataImpl extends UnicastRemoteObject implements Data {
 	 * (non-Javadoc)
 	 * @see Data#meilleurs()
 	 * 
-	 * nEff[] = consiste à sauvegarder l'indice de l'ArrayList des trois meilleurs score de la liste
+	 * nEff[] = consiste Ã  sauvegarder l'indice de l'ArrayList des trois meilleurs score de la liste
 	 * 
 	 * Premier podium:
 	 * On recupere le plus gros score dans l'ArrayList Message
@@ -208,69 +218,86 @@ public class DataImpl extends UnicastRemoteObject implements Data {
 	 * On recupere aussi son idPost, pour l'utiliser plus tard
 	 * 
 	 * Second podium: 
-	 * On va recuperer la valeur inférieur la plus proche du (rang 1)
+	 * On va recuperer la valeur infÃ©rieur la plus proche du (rang 1)
 	 * On recupere aussi son idPost, pour l'utiliser plus tard
 	 * 
 	 * Troisieme podium:
-	 * On va recuperer la valeur inférieur la plus proche du (rang 2)
+	 * On va recuperer la valeur infÃ©rieur la plus proche du (rang 2)
 	 * On recupere aussi son idPost, pour l'utiliser plus tard
 	 * 
-	 * On recupere toute les informations, on les rassemble dans le tableau "podium" qui est definit dès le départ
-	 * Puis on retourne l'affichage du classement.
+	 * Puis on retourne l'affichage du classement en format XML.
 	 * 
 	 */
 	public String meilleurs() throws RemoteException{
-		String s = new String();
-		majScoreMessage();
-		int[] nEff={0,0,0};
+		String xml = new String();
+	    majScoreMessage();
+	    int[] nEff={0,0,0};
 		
-		int val_podium_1=0;
-        int id_post_msg1=0;
-        for(int i=0; i<les_messages.size(); i++)
-            if(les_messages.get(i).getScore()>val_podium_1){
-                val_podium_1 = les_messages.get(i).getScore();
-                id_post_msg1 = les_messages.get(i).getIdPost();
-                nEff[0] = i;
-            }
-        
-        int val_podium_2=val_podium_1;
-        int id_post_msg2=0;
-        for(int i=0; i<les_messages.size(); i++)
-            if(les_messages.get(i).getScore()<= val_podium_2)
-                if(id_post_msg1 != les_messages.get(i).getIdPost()){
-                    val_podium_2 = les_messages.get(i).getScore();
-                    id_post_msg2 = les_messages.get(i).getIdPost();
-                    nEff[1] = i;
-                }
-        
-        int val_podium_3=val_podium_2;
-        for(int i=0; i<les_messages.size(); i++)
-            if(les_messages.get(i).getScore()<= val_podium_3)
-                if(id_post_msg2 != les_messages.get(i).getIdPost()){
-                    val_podium_3 = les_messages.get(i).getScore();
-                    nEff[2] = i;
-                }
+	    int val_podium_1=0;
+	    int id_post_msg1=0;
+		for(int i=0; i<les_messages.size(); i++)
+		    if(les_messages.get(i).getScore()>val_podium_1){
+			val_podium_1 = les_messages.get(i).getScore();
+			id_post_msg1 = les_messages.get(i).getIdPost();
+			nEff[0] = i;
+		    }
 
-		for(int i=0; i<3; i++){
-			Message temp = les_messages.get(nEff[i]);
-			Classement c = new Classement(temp.getIdPost(), temp.getUser(), temp.getScore());
-			podium[i] = c;
+		int val_podium_2=val_podium_1;
+		int id_post_msg2=0;
+		for(int i=0; i<les_messages.size(); i++)
+		    if(les_messages.get(i).getScore()<= val_podium_2)
+			if(id_post_msg1 != les_messages.get(i).getIdPost()){
+			    val_podium_2 = les_messages.get(i).getScore();
+			    id_post_msg2 = les_messages.get(i).getIdPost();
+			    nEff[1] = i;
+			}
+
+		int val_podium_3=val_podium_2;
+		for(int i=0; i<les_messages.size(); i++)
+		    if(les_messages.get(i).getScore()<= val_podium_3)
+			if(id_post_msg2 != les_messages.get(i).getIdPost()){
+			    val_podium_3 = les_messages.get(i).getScore();
+			    nEff[2] = i;
+			}
+
+			for(int i=0; i<3; i++){
+				Message temp = les_messages.get(nEff[i]);
+
+
+				xml += 	"<message id=\""+temp.getIdPost() + "\">" +
+							"<date>" + temp.getDate() + "</date>" +
+							"<user>" + temp.getUser() + " nÂ°" + temp.idUser + "</user>" +
+							"<msg>" + temp.getMessage() + "</msg>" +
+							"<score>" + temp.getScore() + "</score>" + 
+						"</message>";
+			}
+
+			StringWriter stringWriter = new StringWriter();
+		StreamResult xmlOutput = new StreamResult(stringWriter);
+		Source xmlInput = new StreamSource(new StringReader("<posts>" + xml + "</posts>"));
+
+		try {
+		    Transformer transformer = TransformerFactory.newInstance().newTransformer();
+		    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		    transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+		    transformer.transform(xmlInput, xmlOutput);
+		} catch (TransformerConfigurationException e) {
+		    e.printStackTrace();
+		} catch (TransformerException e) {
+		    e.printStackTrace();
 		}
-		
-		for(int i=0; i<3; i++)
-			s = s + podium[i] + "\n";
-		
-		return s;
+        
+		return xmlOutput.getWriter().toString();
 	}
 	
 	/*
 	 * (non-Javadoc)
 	 * @see DataImpl#start()
 	 * 
-	 * @param message	Message utilisé pour la verification d'une clé primaire
+	 * @param message	Message utilisÃ© pour la verification d'une clÃ© primaire
 	 * 
-	 * Vérifie si le message à ajouter dans l'ArrayList est bien unique, dans le cas contraire, il y aura un message d'erreur
-	 * Fonction modifié pour plus de sécurité (UNIQUE KEY sur iDPost)
+	 * VÃ©rifie si le message Ã  ajouter dans l'ArrayList est bien unique, dans le cas contraire, il y aura un message d'erreur
+	 * Fonction modifiÃ© pour plus de sÃ©curitÃ© (UNIQUE KEY sur iDPost)
 	 * 
 	 */
 	public void addMessage(Message message) {
@@ -282,7 +309,7 @@ public class DataImpl extends UnicastRemoteObject implements Data {
         	i++;
 		}
 		if(unique) les_messages.add(message);
-		else System.out.println("Existing ID : Unable to add message -> n°" + message.getIdPost());
+		else System.out.println("Existing ID : Unable to add message -> nÂ°" + message.getIdPost());
     }
 	
 	@Override
@@ -307,10 +334,10 @@ public class DataImpl extends UnicastRemoteObject implements Data {
 	 * (non-Javadoc)
 	 * @see DataImpl#start()
 	 * 
-	 * @param commentaire	Commentaire utilisé pour la verification d'une clé primaire
+	 * @param commentaire	Commentaire utilisÃ© pour la verification d'une clÃ© primaire
 	 * 
-	 * Vérifie si le commentaire à ajouter dans l'ArrayList est bien unique, dans le cas contraire, il y aura un message d'erreur
-	 * Fonction modifié pour plus de sécurité (UNIQUE KEY sur iDPost)
+	 * VÃ©rifie si le commentaire Ã  ajouter dans l'ArrayList est bien unique, dans le cas contraire, il y aura un message d'erreur
+	 * Fonction modifiÃ© pour plus de sÃ©curitÃ© (UNIQUE KEY sur iDPost)
 	 * 
 	 */
 	public void addComment(Comment commentaire) {
@@ -322,7 +349,7 @@ public class DataImpl extends UnicastRemoteObject implements Data {
         	i++;
 		}
 		if(unique) les_commentaires.add(commentaire);
-		else System.out.println("Existing ID : Unable to add comment -> n°" + commentaire.getIdPost());
+		else System.out.println("Existing ID : Unable to add comment -> nÂ°" + commentaire.getIdPost());
     }
 
 	@Override
